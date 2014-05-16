@@ -1,5 +1,5 @@
 do ->
-  game = new Phaser.Game 800px, 600px, Phaser.AUTO
+  game = new Phaser.Game 1024px, 768px, Phaser.AUTO
 
   game.state.add \Menu new platformer.state.Menu
   game.state.add \Play new platformer.state.Play
