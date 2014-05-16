@@ -1,12 +1,7 @@
-class Game
+class platformer.state.Play
 
-  game: void
+  id: 'Play'
   player: void
-
-  -> @game = new Phaser.Game @width, @height, Phaser.AUTO, it, this
-
-  preload: !~>
-    @game.load.spritesheet 'main', 'res/simples_pimples.png', 32px, 32px
 
   create: !~>
     @game.physics.startSystem Phaser.Physics.P2JS
@@ -37,7 +32,22 @@ class Game
       @createBlock x:20, y:y
 
   update: !~>
-    @updateInput!
+    @player.body.velocity.x = 0
+
+    if @key.left.isDown
+      @movePlayerLeft!
+    else if @key.right.isDown
+      @movePlayerRight!
+    else
+      @letPlayerStand!
+
+    if @key.up.isDown and @player.body.touchingBlock
+      @letPlayerJump!
+
+    if @game.input.activePointer.isDown
+      @shootBullet!
+
+    @player.body.touchingBlock = false
 
   bulletBlockCollision: (bullet, block)!~>
     bullet.body.gravity = 0
@@ -117,24 +127,6 @@ class Game
 
     bullet.reset @player.x, @player.y
     @game.physics.arcade.moveToPointer bullet, 700
-
-  updateInput: !->
-    @player.body.velocity.x = 0
-
-    if @key.left.isDown
-      @movePlayerLeft!
-    else if @key.right.isDown
-      @movePlayerRight!
-    else
-      @letPlayerStand!
-
-    if @key.up.isDown and @player.body.touchingBlock
-      @letPlayerJump!
-
-    if @game.input.activePointer.isDown
-      @shootBullet!
-
-    @player.body.touchingBlock = false
 
   flip: !-> it.scale.x *= -1 unless it.scale.x < 0
   unflip: !-> it.scale.x *= -1 unless it.scale.x > 0
