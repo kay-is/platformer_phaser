@@ -14,21 +14,21 @@ class platformer.state.Play
 
     @initPhysics!
 
-    @playerCollisionGroup = @game.physics.p2.createCollisionGroup!
-    @platformCollisionGroup = @game.physics.p2.createCollisionGroup!
+    @blockCollisionGroup = @game.physics.p2.createCollisionGroup!
 
     @game.physics.p2.updateBoundsCollisionGroup!
 
-    @createPlayer x:4, y:15
+    @player = new platformer.Player game:@game, x:15, y:18
+    @player.collides collisionGroup:@blockCollisionGroup
 
-    @initInput!
+    @blockGroup = @game.add.group!
+    @blockGroup.enableBody = yes
+    @blockGroup.physicsBodyType = Phaser.Physics.P2JS
 
-    @platforms = @game.add.group!
-    @platforms.enableBody = yes
-    @platforms.physicsBodyType = Phaser.Physics.P2JS
+    @loadMap map:@maps.test1
 
-    for block in @maps.test1
-      @createBlock x:block.2, y:block.3, sheet:block.0, frame:block.1
+  update: !~>
+    @player.update!
 
   initPhysics: !~>
     @game.world.setBounds 0px, 0px, 1024px, 768px
@@ -37,114 +37,13 @@ class platformer.state.Play
     @game.physics.p2.restitution = 0.0
     @game.physics.p2.setImpactEvents on
 
-  update: !~>
-    @player.body.velocity.x = 0
-
-    if @player.body.x < 0px
-      @player.body.x = @game.width
-    else if @player.body.x > @game.width
-      @player.body.x = 0px
-
-    if @player.body.y < 0px
-      @player.body.y = @game.height
-    else if @player.body.y > @game.height
-      @player.body.y = 0px
-
-    if @key.left.isDown
-      @movePlayerLeft!
-    else if @key.right.isDown
-      @movePlayerRight!
-    else
-      @letPlayerStand!
-
-    if @key.up.isDown and @player.body.touchingBlock
-      @letPlayerJump!
-
-    if @game.input.activePointer.isDown
-      @shootBullet!
-
-    @player.body.touchingBlock = false
-
-  bulletBlockCollision: (bullet, block)!~>
-    bullet.body.gravity = 0
-    @game.debug.body bullet
+  loadMap: ({map})!->
+    for block in map
+      @createBlock x:block.2, y:block.3, sheet:block.0, frame:block.1
 
   createBlock: ({x, y, sheet, frame})!->
-    block = @platforms.create x*32+16, y*32+16, sheet, frame
+    block = @blockGroup.create x*32+16, y*32+16, sheet, frame
     block.body.static = yes
-    block.body.setCollisionGroup @platformCollisionGroup
-    block.body.collides @playerCollisionGroup
+    block.body.setCollisionGroup @blockCollisionGroup
+    block.body.collides @player.collisionGroup
     block
-
-  createPlayer: ({x = 0, y = 0})!->
-    @player = @game.add.sprite x*32, y*32, 'main', 70
-
-    @player.anchor.setTo 0.5, 0.5
-
-    @game.physics.p2.enable @player, no
-    @player.body.fixedRotation = yes
-    @player.body.setCollisionGroup @playerCollisionGroup
-    @player.body.collides @platformCollisionGroup, ~> @player.body.touchingBlock = yes
-
-    @player.body.collideWorldBounds = no
-
-    @player.animations.add \walk [71 72] 10 yes
-    @initBullets!
-
-  initBullets: !->
-    @bulletPool = @game.add.group!
-    @bulletPool.enableBody = yes
-
-    for i from 0 til 5
-      bullet = @game.add.sprite 0, 0, 'main', 1700
-      @bulletPool.add bullet
-      bullet.anchor.setTo 0.5, 0.5
-      bullet.body.gravity.y = 700
-      bullet.kill!
-
-  initInput: !->
-    uses = @game.input.keyboard~addKey
-    @key =
-      up: uses Phaser.Keyboard.W
-      left: uses Phaser.Keyboard.A
-      right: uses Phaser.Keyboard.D
-
-  movePlayerLeft: !->
-    @flip @player
-    @player.body.velocity.x = -300px
-    @player.animations.play \walk
-
-  movePlayerRight: !->
-    @unflip @player
-    @player.body.velocity.x = 300px
-    @player.animations.play \walk
-
-  letPlayerStand: !->
-    @player.animations.stop!
-    @player.frame = 70
-
-  letPlayerJump: !->
-    @player.body.velocity.y = -500px
-
-  shotBullets: {}
-  shootBullet: !->
-    @lastBulletShotAt = 0 unless @lastBulletShotAt?
-
-    return unless @game.time.now - @lastBulletShotAt > 1000ms
-
-    @lastBulletShotAt = @game.time.now
-
-    bullet = @bulletPool.getFirstDead!
-
-    return unless bullet?
-
-    bullet.revive!
-
-    bullet.checkWorldBounds = yes
-    bullet.outOfBoundsKill = yes
-
-    bullet.reset @player.x, @player.y
-    @game.physics.arcade.moveToPointer bullet, 700
-
-  flip: !-> it.scale.x *= -1 unless it.scale.x < 0
-  unflip: !-> it.scale.x *= -1 unless it.scale.x > 0
