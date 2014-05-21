@@ -1,15 +1,26 @@
-class platformer.Player
+class Platformer.Player
 
   sprite: void
   game: void
   collisionGroup: void
+  shurikenCollisionGroup: void
+
+  speed: 300px
+  jumpSpeed: 500px
+
+  spriteFrame: 70
+
+  keyConfig:
+    jump: 'W'
+    left: 'A'
+    right: 'D'
 
   ({@game, x = 0px, y = 0px})!~>
-    @sprite = @game.add.sprite x*32, y*32, 'main', 70
+    @sprite = @game.add.sprite x*32, y*32, 'main', @spriteFrame
 
     @sprite.anchor.setTo 0.5, 0.5
 
-    @game.physics.p2.enable @sprite, no
+    @game.physics.p2.enable @sprite
     @sprite.body.fixedRotation = yes
     @collisionGroup = @game.physics.p2.createCollisionGroup!
     @sprite.body.setCollisionGroup @collisionGroup
@@ -20,52 +31,62 @@ class platformer.Player
 
     @sprite.animations.add \walk [71 72] 10 yes
 
+    @initShurikens!
+
   initInput: !->
     uses = @game.input.keyboard~addKey
     @key =
-      up: uses Phaser.Keyboard.W
-      left: uses Phaser.Keyboard.A
-      right: uses Phaser.Keyboard.D
+      jump: uses Phaser.Keyboard[@keyConfig.jump]
+      left: uses Phaser.Keyboard[@keyConfig.left]
+      right: uses Phaser.Keyboard[@keyConfig.right]
 
   collides: ({collisionGroup})!~>
     @sprite.body.collides collisionGroup, (player, block)!~>
       @sprite.body.touchingBlock = yes if block.y > player.y
 
-  update: !~>
-    @sprite.body.velocity.x = 0
+    @shurikenPool.forEach !->
+      it.body.collides collisionGroup
 
-    if @sprite.body.x < 0px
-      @sprite.body.x = @game.width
-    else if @sprite.body.x > @game.width
-      @sprite.body.x = 0px
+  worldWrap: ({body})!~>
+    if body.x < 0px
+      body.x = @game.width
+    else if body.x > @game.width
+      body.x = 0px
 
-    if @sprite.body.y < 0px
-      @sprite.body.y = @game.height
-    else if @sprite.body.y > @game.height
-      @sprite.body.y = 0px
+    if body.y < 0px
+      body.y = @game.height
+    else if body.y > @game.height
+      body.y = 0px
 
-    if @key.left.isDown
-      @moveLeft!
-    else if @key.right.isDown
-      @moveRight!
-    else
-      @stand!
+  updateInput: !~>
+    | @key.left.isDown  => @moveLeft!
+    | @key.right.isDown => @moveRight!
+    | _                 => @stand!
 
-    if @key.up.isDown and @sprite.body.touchingBlock
+    if @key.jump.isDown and @sprite.body.touchingBlock
       @sprite.body.touchingBlock = no
       @jump!
 
     if @game.input.activePointer.isDown
-      @shootBullet!
+      @throw!
+
+  update: !~>
+    @sprite.body.velocity.x = 0px
+
+    @worldWrap @sprite
+
+    @updateInput!
+
+    @shurikenPool.forEachAlive @worldWrap
 
   moveLeft: !->
     @flip!
-    @sprite.body.velocity.x = -300px
+    @sprite.body.velocity.x = -@speed
     @sprite.animations.play \walk
 
   moveRight: !->
     @unflip!
-    @sprite.body.velocity.x = 300px
+    @sprite.body.velocity.x = @speed
     @sprite.animations.play \walk
 
   stand: !->
@@ -73,7 +94,60 @@ class platformer.Player
     @sprite.frame = 70
 
   jump: !->
-    @sprite.body.velocity.y = -500px
+    @sprite.body.velocity.y = -@jumpSpeed
 
-  flip: !-> @sprite.scale.x *= -1 unless @sprite.scale.x < 0
-  unflip: !-> @sprite.scale.x *= -1 unless @sprite.scale.x > 0
+  throw: !~>
+    @lastBulletShotAt = 0 unless @lastBulletShotAt
+
+    return if @game.time.now - @lastBulletShotAt < 300ms
+
+    @lastBulletShotAt = @game.time.now
+
+    shuriken = @shurikenPool.getFirstDead!
+    return unless shuriken?
+
+    shuriken.revive!
+
+    mouse = @game.input.activePointer
+
+    xOffset = if mouse.x < @sprite.x then -10 else 10
+
+    shuriken.reset @sprite.x + xOffset, @sprite.y
+
+    shuriken.checkWorldBounds = yes
+    shuriken.outOfBoundsKill = yes
+
+
+    shuriken.rotation = @game.math.angleBetween shuriken.x, shuriken.y, mouse.x, mouse.y
+
+    shuriken.body.velocity.x = (Math.cos shuriken.rotation) * 1300px
+    shuriken.body.velocity.y = (Math.sin shuriken.rotation) * 1300px
+
+  initShurikens: !~>
+    @shurikenPool = @game.add.group!
+    @shurikenCollisionGroup = @game.physics.p2.createCollisionGroup!
+    for i from 1 to 10
+      shuriken = @game.add.sprite 0px, 0px, 'main', 1742
+      @shurikenPool.add shuriken
+
+      shuriken.anchor.setTo 0.5width, 0.5height
+
+      @game.physics.p2.enable shuriken
+
+      shuriken.body.setCircle 10px
+
+      shuriken.body.setCollisionGroup @shurikenCollisionGroup
+
+      shuriken.body.collides [@collisionGroup, @shurikenCollisionGroup]
+
+      @sprite.body.collides @shurikenCollisionGroup
+
+      shuriken.kill!
+
+  flip: !->
+    @sprite.scale.x *= -1 unless @sprite.scale.x < 0
+    @flipped = yes
+
+  unflip: !->
+    @sprite.scale.x *= -1 unless @sprite.scale.x > 0
+    @flipped = no

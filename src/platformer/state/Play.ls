@@ -1,4 +1,4 @@
-class platformer.state.Play
+class Platformer.state.Play
 
   id: 'Play'
   player: void
@@ -9,35 +9,35 @@ class platformer.state.Play
   create: !~>
     @game.stage.backgroundColor = \#000000
 
-    esc = @game.input.keyboard.addKey Phaser.Keyboard.ESC
-    esc.onDown.add !~> @game.state.start \Menu
+    @initMainInput!
 
     @initPhysics!
 
-    @blockCollisionGroup = @game.physics.p2.createCollisionGroup!
-
-    @game.physics.p2.updateBoundsCollisionGroup!
-
-    @player = new platformer.Player game:@game, x:15, y:18
-    @player.collides collisionGroup:@blockCollisionGroup
-
-    @blockGroup = @game.add.group!
-    @blockGroup.enableBody = yes
-    @blockGroup.physicsBodyType = Phaser.Physics.P2JS
+    @player = new Platformer.Player game:@game, x:15, y:18
 
     @loadMap map:@maps.test1
 
+    @player.collides collisionGroup:@blockCollisionGroup
+
   update: !~>
     @player.update!
+
+  initMainInput: !~>
+    esc = @game.input.keyboard.addKey Phaser.Keyboard.ESC
+    esc.onDown.add !~> @game.state.start \Menu
 
   initPhysics: !~>
     @game.world.setBounds 0px, 0px, 1024px, 768px
     @game.physics.startSystem Phaser.Physics.P2JS
     @game.physics.p2.gravity.y = 1200
-    @game.physics.p2.restitution = 0.0
     @game.physics.p2.setImpactEvents on
 
   loadMap: ({map})!->
+    @blockGroup = @game.add.group!
+    @blockGroup.enableBody = yes
+    @blockGroup.physicsBodyType = Phaser.Physics.P2JS
+    @blockCollisionGroup = @game.physics.p2.createCollisionGroup!
+
     for block in map
       @createBlock x:block.2, y:block.3, sheet:block.0, frame:block.1
 
@@ -46,4 +46,5 @@ class platformer.state.Play
     block.body.static = yes
     block.body.setCollisionGroup @blockCollisionGroup
     block.body.collides @player.collisionGroup
+    block.body.collides @player.shurikenCollisionGroup
     block

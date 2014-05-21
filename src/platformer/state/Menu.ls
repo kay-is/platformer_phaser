@@ -1,4 +1,4 @@
-class platformer.state.Menu
+class Platformer.state.Menu
 
   preload: !->
     @game.stage.backgroundColor = \#000000

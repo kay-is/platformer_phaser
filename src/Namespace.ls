@@ -1,2 +1,2 @@
-platformer = {}
-platformer.state = {}
+Platformer = {}
+Platformer.state = {}

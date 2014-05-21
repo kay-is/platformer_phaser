@@ -1,4 +1,4 @@
-class platformer.state.Edit
+class Platformer.state.Edit
 
   create: !~>
     @blocks = []
