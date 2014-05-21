@@ -126,7 +126,7 @@ class Platformer.Player
   initShurikens: !~>
     @shurikenPool = @game.add.group!
     @shurikenCollisionGroup = @game.physics.p2.createCollisionGroup!
-    for i from 1 to 10
+    for i from 1 to 100
       shuriken = @game.add.sprite 0px, 0px, 'main', 1742
       @shurikenPool.add shuriken
 
