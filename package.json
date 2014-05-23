@@ -12,6 +12,7 @@
     "gulp": "~3.6.2",
     "gulp-livescript": "~0.2.1",
     "gulp-concat": "~2.2.0",
-    "gulp-bower": "0.0.5"
+    "gulp-bower": "0.0.5",
+    "gulp-uglify": "~0.3.0"
   }
 }

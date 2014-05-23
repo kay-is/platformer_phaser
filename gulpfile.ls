@@ -2,6 +2,7 @@ gulp = require \gulp
 concat = require \gulp-concat
 livescript = require \gulp-livescript
 bower = require \gulp-bower
+uglify = require \gulp-uglify
 
 resources = './res/*.png'
 
@@ -15,6 +16,7 @@ gulp.task \compile ->
   gulp.src sources
     .pipe concat 'game.ls'
     .pipe livescript!
+    .pipe uglify!
     .pipe gulp.dest './build'
 
 gulp.task \copyResources ->
