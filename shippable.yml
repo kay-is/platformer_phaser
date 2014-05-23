@@ -13,6 +13,7 @@ before_install:
 # Running npm test to run your test cases
 script:
   - lsc-gulp build
+  - scp -rp build shippable:Sh1pp4bl311@dest:/home/nodejs/www/butt.ventures/games/platformer
 
 notifications:
   email:
