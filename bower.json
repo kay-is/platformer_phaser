@@ -1,0 +1,7 @@
+{
+	"name":  "Platformer",
+	"version": "0.0.0",
+	"dependencies": {
+		"phaser": "2.0.4"
+	}
+}

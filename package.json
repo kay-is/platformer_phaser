@@ -1,0 +1,17 @@
+{
+  "name": "platformer_phaser",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kay-is/platformer_phaser.git"
+  },
+  "author": "",
+  "license": "GPL",
+  "gitHead": "359f7b1fc845ee1a8c8d3236474f0b8310dd6eaf",
+  "devDependencies": {
+    "gulp": "~3.6.2",
+    "gulp-livescript": "~0.2.1",
+    "gulp-concat": "~2.2.0",
+    "gulp-bower": "0.0.5"
+  }
+}

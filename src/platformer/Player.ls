@@ -45,7 +45,7 @@ class Platformer.Player
       @sprite.body.touchingBlock = yes if block.y > player.y
 
     @shurikenPool.forEach !->
-      it.body.collides collisionGroup
+      it.body.collides collisionGroup, !-> it.static = yes
 
   worldWrap: ({body})!~>
     if body.x < 0px
@@ -110,25 +110,20 @@ class Platformer.Player
 
     mouse = @game.input.activePointer
 
-    xOffset = if mouse.x < @sprite.x then -10 else 10
+    xOffset = if mouse.x < @sprite.x then -30 else 30
 
     shuriken.reset @sprite.x + xOffset, @sprite.y
 
     shuriken.checkWorldBounds = yes
     shuriken.outOfBoundsKill = yes
 
-
     shuriken.rotation = @game.math.angleBetween shuriken.x, shuriken.y, mouse.x, mouse.y
 
     shuriken.body.velocity.x = (Math.cos shuriken.rotation) * 1300px
     shuriken.body.velocity.y = (Math.sin shuriken.rotation) * 1300px
 
-  initShurikens: !~>
-    @shurikenPool = @game.add.group!
-    @shurikenCollisionGroup = @game.physics.p2.createCollisionGroup!
-    for i from 1 to 100
-      shuriken = @game.add.sprite 0px, 0px, 'main', 1742
-      @shurikenPool.add shuriken
+  createShuriken: !~>
+      shuriken = @shurikenPool.add (@game.add.sprite 0px, 0px, 'main', 1742)
 
       shuriken.anchor.setTo 0.5width, 0.5height
 
@@ -138,11 +133,20 @@ class Platformer.Player
 
       shuriken.body.setCollisionGroup @shurikenCollisionGroup
 
-      shuriken.body.collides [@collisionGroup, @shurikenCollisionGroup]
+      shuriken.body.collides @shurikenCollisionGroup
+      shuriken.body.collides @collisionGroup, !->
+        shuriken.body.static = no
+        shuriken.kill!
 
       @sprite.body.collides @shurikenCollisionGroup
 
       shuriken.kill!
+
+  initShurikens: !~>
+    @shurikenPool = @game.add.group!
+    @shurikenCollisionGroup = @game.physics.p2.createCollisionGroup!
+    for i from 1 to 100
+      @createShuriken!
 
   flip: !->
     @sprite.scale.x *= -1 unless @sprite.scale.x < 0
