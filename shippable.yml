@@ -9,3 +9,11 @@ node_js:
 before_install:
  - npm install gulp -g
  - npm install livescript-gulp -g
+
+# Running npm test to run your test cases
+script:
+  - lsc-gulp build
+
+notifications:
+  email:
+    - kay.ploesser@gmail.com
